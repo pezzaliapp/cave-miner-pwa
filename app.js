@@ -80,20 +80,48 @@
     }
   ];
 
-  // Stato
-  var grid = [], player = {x:1,y:1, alive:true}, need=0, have=0, exitOpen=false, lives=3, time=0, paused=false, gameOver=false;
-  function fillLevelSelect(){
-    for (var i=0;i<LEVELS.length;i++){
+
+  // --- Custom levels from localStorage ---
+  function loadCustomLevels(){
+    try {
+      var raw = localStorage.getItem('caveminer_levels');
+      if (!raw) return [];
+      var arr = JSON.parse(raw);
+      if (!(arr && arr.length)) return [];
+      // basic validation: map must be 14 strings of len 20
+      var out = [];
+      for (var i=0;i<arr.length;i++){
+        var L = arr[i];
+        if (!L || !L.name || !L.map || !L.need) continue;
+        if (!(L.map.length===14)) continue;
+        var ok = true;
+        for (var r=0;r<L.map.length;r++){ if (typeof L.map[r] !== 'string' || L.map[r].length !== 20){ ok=false; break; } }
+        if (!ok) continue;
+        out.push({ name:String(L.name), need: L.need|0, map: L.map });
+      }
+      return out;
+    } catch(e){ return []; }
+  }
+  function refreshLevelList(){
+    // reset options
+    while (levelSel.firstChild) levelSel.removeChild(levelSel.firstChild);
+    var src = LEVELS.concat(loadCustomLevels());
+    for (var i=0;i<src.length;i++){
       var opt = document.createElement('option');
       opt.value = i;
-      opt.textContent = (i+1)+". "+LEVELS[i].name;
+      opt.textContent = (i+1)+". "+src[i].name;
       levelSel.appendChild(opt);
     }
   }
-  fillLevelSelect();
+
+  // Stato
+  var grid = [], player = {x:1,y:1, alive:true}, need=0, have=0, exitOpen=false, lives=3, time=0, paused=false, gameOver=false;
+  function fillLevelSelect(){} // obsolete
+  refreshLevelList();
 
   function loadLevel(idx){
-    var L = LEVELS[idx|0] || LEVELS[0];
+    var merged = LEVELS.concat(loadCustomLevels());
+    var L = merged[idx|0] || merged[0];
     grid = new Array(ROWS);
     var r,c,row,ch;
     player.x=1; player.y=1; player.alive=true;
