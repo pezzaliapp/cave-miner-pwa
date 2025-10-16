@@ -1,17 +1,18 @@
 *{box-sizing:border-box}body{margin:0;font:14px/1.4 -apple-system,system-ui,Segoe UI,Roboto,Arial;background:#0b1020;color:#e8f1ff}
 .topbar{display:flex;align-items:center;gap:.5rem;padding:.6rem 1rem;background:#0e1630;border-bottom:1px solid #1b2647}
-.topbar h1{margin:0;font-size:16px;letter-spacing:.3px}
-.wrap{max-width:720px;margin:0 auto;padding:12px}
+.topbar h1{margin:0;font-size:16px;letter-spacing:.3px}.brand{color:#81e6d9}
+.wrap{max-width:760px;margin:0 auto;padding:12px}
 .stage{display:flex;justify-content:center;background:#0e1426;border:1px solid #1a2444;border-radius:12px;padding:8px}
 canvas{image-rendering:pixelated;width:100%;height:auto;max-width:640px;border-radius:8px;background:#000}
 .hud{display:flex;justify-content:space-between;gap:12px;margin:10px 2px 4px;color:#cfe3ff}
-.controls{display:flex;justify-content:center;align-items:center;gap:36px;margin-top:8px;flex-wrap:wrap}
+.controls{display:flex;justify-content:center;align-items:center;gap:28px;margin-top:8px;flex-wrap:wrap}
+.levelpick{display:flex;align-items:center;gap:8px}
 .dpad{display:flex;flex-direction:column;gap:8px;align-items:center}
 .dpad .h{display:flex;gap:8px}
 .actions{display:flex;flex-direction:column;align-items:center;gap:6px}
-.btn{appearance:none;border:1px solid #41557a;background:#1b2744;color:#eaf0ff;border-radius:12px;min-width:52px;min-height:52px;font:600 18px/50px -apple-system,system-ui;box-shadow:0 2px 0 #0a0f25}
+.btn{appearance:none;border:1px solid #41557a;background:#1b2744;color:#eaf0ff;border-radius:12px;min-width:52px;min-height:40px;font:600 16px/38px -apple-system,system-ui;box-shadow:0 2px 0 #0a0f25}
 .btn:active{transform:translateY(1px);box-shadow:none}
-.btn.big{min-width:72px;min-height:72px;border-radius:50%;font-size:22px}
+.btn.big{min-width:72px;min-height:72px;border-radius:50%;font-size:22px;line-height:70px}
 .label{font-size:12px;opacity:.8}
 .hint{opacity:.75;text-align:center;margin-top:8px}
-@media (min-width:900px){.wrap{max-width:860px}}
+@media (min-width:900px){.wrap{max-width:880px}}

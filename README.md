@@ -1,16 +1,13 @@
-# Cave Miner — PezzaliAPP Edition
-Replica in stile *Boulder Dash* scritta in JS **ES5** (compatibile iOS 8).
+# Cave Miner — PezzaliAPP Edition (PWA, ES5)
+- Compatibile iPhone 5s / iOS 8.4.1 (niente SW; funziona online)
+- Su device moderni è installabile e offline (SW app-shell)
+- Comandi centrati sotto al canvas (touch-friendly)
 
 ## Pubblicazione
-1. Crea un repo (es. `cave-miner-pwa`), abilita **GitHub Pages** dalla root.
-2. Carica tutti i file così come sono.
-3. Apri l'URL di Pages. Su iOS 8 funziona online (niente offline); sui browser moderni è PWA con offline.
+1. Carica tutti i file in una repo GitHub.
+2. Attiva GitHub Pages (branch main, root).
+3. Apri l’URL. Se lo installi, verrà messo in cache per l’offline (browser moderni).
 
-## Controlli
-- Tastiera: frecce per muoversi, **Space** = pausa.
-- Touch: D-Pad sotto il gioco, bottone ● per pausa.
-
-## Note tecniche
-- Nessun asset esterno; tutto disegnato via Canvas.
-- Codice ES5 (niente module/arrow/class) per vecchi Safari.
-- Se vuoi più livelli, modifica `levelMap` in `app.js`.
+## Personalizzazione
+- Livelli: modifica `LEVELS` in `app.js` (mappe 20×14, simboli nel commento).
+- Diamanti richiesti per aprire l’uscita: proprietà `need` per ogni livello.
