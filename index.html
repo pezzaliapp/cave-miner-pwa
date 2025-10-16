@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Cave Miner — PezzaliAPP Edition</title>
+  <meta name="theme-color" content="#101522">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <!-- iOS legacy note: niente Service Worker su iOS 8, ma il gioco funziona comunque online -->
+</head>
+<body>
+  <header class="topbar">
+    <h1>Cave Miner</h1>
+  </header>
+
+  <main class="wrap">
+    <div class="stage">
+      <canvas id="game" width="480" height="336" aria-label="Schermo di gioco"></canvas>
+    </div>
+
+    <div class="hud">
+      <div>⏱️ <span id="time">0</span>s</div>
+      <div>💎 <span id="diamonds">0</span>/<span id="need">0</span></div>
+      <div>❤ <span id="lives">3</span></div>
+    </div>
+
+    <div class="controls">
+      <div class="dpad">
+        <button class="btn" data-k="ArrowUp">▲</button>
+        <div class="h">
+          <button class="btn" data-k="ArrowLeft">◀</button>
+          <button class="btn" data-k="ArrowDown">▼</button>
+          <button class="btn" data-k="ArrowRight">▶</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn big" data-k="Space">●</button>
+        <div class="label">Pausa</div>
+      </div>
+    </div>
+
+    <p class="hint">Tasti: frecce per muoversi / Space pausa • Su mobile usa i pulsanti sotto</p>
+  </main>
+
+  <script>
+    // Registra SW solo dove supportato (iOS 8 non lo ha)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}) });
+    }
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
