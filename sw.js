@@ -1,5 +1,5 @@
-// sw.js — Cave Miner v2 (cache-first + html fallback) — icons/ only
-var CACHE = 'caveminer-v2-cache-v2';
+// sw.js — Cave Miner v2 (cache-first + html fallback) — con suoni
+var CACHE = 'caveminer-v2-cache-v3'; // bump per forzare update
 var ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,13 @@ var ASSETS = [
   './style.css',
   './manifest.webmanifest',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+
+  // SFX (assicurati che esistano in icons/sfx/)
+  './icons/sfx/push.wav',
+  './icons/sfx/fall.wav',
+  './icons/sfx/pick.wav',
+  './icons/sfx/win.wav'
 ];
 
 self.addEventListener('install', function (e) {
@@ -21,8 +27,10 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; })
-        .map(function (k) { return caches.delete(k); }));
+      return Promise.all(
+        keys.filter(function (k) { return k !== CACHE; })
+            .map(function (k) { return caches.delete(k); })
+      );
     }).then(function () { return self.clients.claim(); })
   );
 });
@@ -31,7 +39,7 @@ self.addEventListener('fetch', function (e) {
   var req = e.request;
   if (req.method !== 'GET') return;
 
-  // SPA / navigazioni → prova la rete, poi fallback html
+  // Navigazioni → rete prima, fallback HTML
   if (req.mode === 'navigate') {
     e.respondWith(
       fetch(req).catch(function () { return caches.match('./index.html'); })
@@ -39,7 +47,7 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  // statici → cache first, poi rete e metti in cache
+  // Statici → cache-first, poi rete e cache
   e.respondWith(
     caches.match(req).then(function (r) {
       if (r) return r;
