@@ -36,7 +36,7 @@ Cave Miner è un arcade “a passi” ispirato ai classici *cave-digging*. Scava
 ---
 
 ## 🗂 Struttura cartelle
-
+```text
 .
 ├─ index.html
 ├─ app.js
