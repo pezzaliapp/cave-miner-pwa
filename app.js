@@ -13,24 +13,65 @@
   var levelSel = document.getElementById('levelSel'),
       btnPlay  = document.getElementById('btnPlay');
 
+  // ---------------- SFX ----------------
   var sfx = {
     push: document.getElementById('sfx_push'),
     fall: document.getElementById('sfx_fall'),
     pick: document.getElementById('sfx_pick'),
     win:  document.getElementById('sfx_win')
   };
-  sfx.push.src='./assets/sfx/push.wav';
-  sfx.fall.src='./assets/sfx/fall.wav';
-  sfx.pick.src='./assets/sfx/pick.wav';
-  sfx.win.src ='./assets/sfx/win.wav';
-
-  var btnMute = document.getElementById('btnMute');
-  var muted = false;
-  btnMute.onclick = function(){ muted=!muted; btnMute.textContent = muted?'🔇':'🔊'; };
-  function play(name){
-    try{ if(!muted){ sfx[name].currentTime=0; sfx[name].play(); } }catch(_){}
+  // percorsi corretti: icons/sfx/
+  sfx.push.src = './icons/sfx/push.wav';
+  sfx.fall.src = './icons/sfx/fall.wav';
+  sfx.pick.src = './icons/sfx/pick.wav';
+  sfx.win.src  = './icons/sfx/win.wav';
+  // preload e playsinline per mobile
+  for (var k in sfx) {
+    if (!sfx[k]) continue;
+    sfx[k].setAttribute('preload','auto');
+    sfx[k].setAttribute('playsinline','');
+    try { sfx[k].volume = 0.9; } catch(_) {}
   }
 
+  // mute + unlock audio mobile
+  var btnMute = document.getElementById('btnMute');
+  var muted = false;
+  if (btnMute) {
+    btnMute.onclick = function(){ muted=!muted; btnMute.textContent = muted?'🔇':'🔊'; };
+  }
+
+  window.__audioUnlocked = false;
+  function unlockAudioOnce(){
+    if (window.__audioUnlocked) return;
+    function tryPlay(a){
+      if (!a) return Promise.resolve();
+      try { a.muted = true; } catch(_){}
+      var p = a.play();
+      if (p && typeof p.then==='function') {
+        return p.then(function(){ try{ a.pause(); a.muted=false; }catch(_){}}).catch(function(){});
+      } else {
+        try{ a.pause(); a.muted=false; }catch(_){}
+        return Promise.resolve();
+      }
+    }
+    Promise.resolve()
+      .then(function(){ return tryPlay(sfx.push); })
+      .then(function(){ return tryPlay(sfx.fall); })
+      .then(function(){ return tryPlay(sfx.pick); })
+      .then(function(){ return tryPlay(sfx.win); })
+      .finally(function(){ window.__audioUnlocked = true; });
+  }
+
+  function play(name){
+    try{
+      if (!muted && window.__audioUnlocked && sfx[name]) {
+        sfx[name].currentTime = 0;
+        sfx[name].play();
+      }
+    }catch(_){}
+  }
+
+  // ---------------- Costanti / mappe ----------------
   var EMPTY=0, DIRT=1, WALL=2, ROCK=3, DIAM=4, EXIT=5;
 
   var LEVELS = [
@@ -84,6 +125,7 @@
     ]}
   ];
 
+  // custom levels
   function loadCustomLevels(){
     try {
       var raw = localStorage.getItem('caveminer_levels');
@@ -114,9 +156,15 @@
   }
   refreshLevelList();
 
+  // ---------------- Stato ----------------
   var grid = [], player = {x:1,y:1,alive:true}, need=0, have=0, exitOpen=false, lives=3, time=0, paused=true, gameOver=false;
+
   var startOverlay = document.getElementById('start');
-  document.getElementById('btnStart').onclick = function(){ paused=false; startOverlay.style.display='none'; };
+  document.getElementById('btnStart').onclick = function(){
+    unlockAudioOnce();
+    paused=false;
+    startOverlay.style.display='none';
+  };
 
   function inb(x,y){ return y>=0 && y<ROWS && x>=0 && x<COLS; }
   function get(x,y){ return inb(x,y)? grid[y][x] : WALL; }
@@ -154,6 +202,7 @@
   }
   loadLevel(0);
 
+  // ---------------- Input ----------------
   var input = {up:false,down:false,left:false,right:false};
   function key(e,down){
     var k = e.key || e.code || e.which;
@@ -167,6 +216,14 @@
   }
   document.addEventListener('keydown', function(e){ key(e,true); });
   document.addEventListener('keyup',   function(e){ key(e,false); });
+
+  // Sblocco audio anche su interazione con canvas/pad
+  canvas.addEventListener('touchstart', unlockAudioOnce, {passive:true});
+  canvas.addEventListener('mousedown',  unlockAudioOnce, false);
+  var padEl = document.getElementById('pad');
+  if (padEl){
+    padEl.addEventListener('touchstart', unlockAudioOnce, {passive:true});
+  }
 
   (function bindButtons(){
     var btns = document.querySelectorAll('#pad .btn');
@@ -198,10 +255,12 @@
     }
   })();
 
+  // ---------------- Movimento a passi ----------------
   var moveCooldown = 0, MOVE_REPEAT_MS = 110;
   function tryMove(dx,dy){
     var nx = player.x + dx, ny = player.y + dy, nt = get(nx, ny);
 
+    // spinta roccia orizzontale (se la cella dopo è vuota e la roccia è appoggiata)
     if (dy===0 && (dx===1 || dx===-1) && nt===ROCK){
       if (isEmpty(nx+dx, ny) && rockIsSupported(nx, ny)){
         set(nx+dx, ny, ROCK);
@@ -213,6 +272,7 @@
       }
     }
 
+    // celle attraversabili
     if (nt===EMPTY || nt===DIRT || nt===DIAM || (nt===EXIT && exitOpen)){
       if (nt===DIAM){
         diaEl.textContent = String(++have);
@@ -220,7 +280,6 @@
         play('pick');
       }
       if (nt===EXIT && exitOpen){
-        // win
         play('win');
         setTimeout(function(){ loadLevel(levelSel.selectedIndex|0); }, 600);
         return true;
@@ -251,6 +310,7 @@
     setTimeout(function(){ player.alive=true; loadLevel(levelSel.selectedIndex|0); }, 500);
   }
 
+  // ---------------- Fisica rocce/diamanti ----------------
   function physicsStep(){
     var x, y, t;
     for (y = ROWS - 2; y >= 0; y--) {
@@ -279,6 +339,7 @@
     }
   }
 
+  // ---------------- Render ----------------
   function rect(x,y,w,h,fill,stroke){
     if (fill){ ctx.fillStyle=fill; ctx.fillRect(x,y,w,h); }
     if (stroke){ ctx.strokeStyle=stroke; ctx.strokeRect(x,y,w,h); }
@@ -327,6 +388,7 @@
     rect(px+8,py+6,3,3,"#000"); rect(px+13,py+6,3,3,"#000");
   }
 
+  // ---------------- Loop ----------------
   var ACC=0, STEP=1000/60, lastTs=Date.now(), tick=0;
   function loop(){
     var now=Date.now(), dt=now-lastTs; lastTs=now;
@@ -346,6 +408,7 @@
   }
   loop();
 
+  // ---------------- UI/boot ----------------
   btnPlay.addEventListener('click', function(){ loadLevel(levelSel.selectedIndex|0); });
   if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
 })();
