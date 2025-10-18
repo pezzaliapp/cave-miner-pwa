@@ -1,6 +1,32 @@
-// SW app-shell (disattivo su iOS 8 perché non supporta SW) 
-const CACHE='cave-miner-pwa-v2';
-const ASSETS=['./','./index.html','./style.css','./app.js','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+// sw.js — Cave Miner v2 (cache-first + html fallback)
+var CACHE = 'caveminer-v2-cache-v1';
+var ASSETS = [
+  './','./index.html','./app.js','./manifest.webmanifest',
+  './assets/icon-192.png','./assets/icon-512.png','./assets/maskable-192.png','./assets/maskable-512.png',
+  './assets/sfx/push.wav','./assets/sfx/fall.wav','./assets/sfx/pick.wav','./assets/sfx/win.wav'
+];
+self.addEventListener('install', function(e){
+  e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(ASSETS); }).then(function(){ return self.skipWaiting(); }));
+});
+self.addEventListener('activate', function(e){
+  e.waitUntil(caches.keys().then(function(keys){
+    return Promise.all(keys.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));
+  }).then(function(){ return self.clients.claim(); }));
+});
+self.addEventListener('fetch', function(e){
+  var req=e.request;
+  if(req.method!=='GET') return;
+  if(req.mode==='navigate'){
+    e.respondWith(fetch(req).catch(function(){return caches.match('./index.html');}));
+    return;
+  }
+  e.respondWith(
+    caches.match(req).then(function(r){ 
+      if(r) return r;
+      return fetch(req).then(function(res){
+        try{ if(new URL(req.url).origin===self.location.origin){ caches.open(CACHE).then(function(c){ c.put(req,res.clone()); }); } }catch(_){}
+        return res;
+      });
+    })
+  );
+});
